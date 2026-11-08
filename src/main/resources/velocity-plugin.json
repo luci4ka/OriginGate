@@ -1,0 +1,9 @@
+{
+  "id": "origingate",
+  "name": "OriginGate",
+  "version": "${version}",
+  "description": "IP lookup and access rules for Velocity",
+  "authors": ["YourName"],
+  "dependencies": [],
+  "main": "io.github.origingate.velocity.OriginGateVelocity"
+}

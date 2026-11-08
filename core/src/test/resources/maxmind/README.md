@@ -1,1 +1,0 @@
-Test databases from https://github.com/maxmind/MaxMind-DB/tree/main/test-data (Copyright MaxMind, Inc., licensed under Apache-2.0 or MIT, at your option). They hold made-up test data, not real GeoLite2 data. Both were built on 2026-02-04.

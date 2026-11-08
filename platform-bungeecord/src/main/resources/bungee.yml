@@ -1,6 +1,0 @@
-name: OriginGate
-version: '${version}'
-main: io.github.origingate.bungee.OriginGateBungee
-description: VPN, proxy, and country checks before backend admission
-author: Kaizen Network
-softDepends: [LuckPerms]
