@@ -29,6 +29,7 @@ public final class MaxMindUpdater {
     public static final Duration CHECK_EVERY = Duration.ofHours(24);
     static final long MAX_FILE_BYTES = 512L * 1024 * 1024;
     private static final Duration TIMEOUT = Duration.ofMinutes(2);
+    private static final int MAX_REDIRECTS = 5;
 
     public enum Outcome { DOWNLOADED, UP_TO_DATE }
 
@@ -92,17 +93,21 @@ public final class MaxMindUpdater {
         return Outcome.DOWNLOADED;
     }
 
-    /** Sends the request and follows one redirect, as GitHub always redirects {@code /latest/download/}. */
+    /** Sends the request and follows up to {@link #MAX_REDIRECTS} redirects. The Location header is read before the body is closed. */
     private HttpResponse<InputStream> download(URI url) throws IOException {
-        HttpResponse<InputStream> response = send(url);
-        int code = response.statusCode();
-        if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
-            discard(response);
+        URI current = url;
+        for (int hop = 0; hop < MAX_REDIRECTS; hop++) {
+            HttpResponse<InputStream> response = send(current);
+            int code = response.statusCode();
+            if (code != 301 && code != 302 && code != 303 && code != 307 && code != 308) {
+                return response;
+            }
             String location = response.headers().firstValue("Location")
                     .orElseThrow(() -> new IOException("GitHub sent a redirect without a Location"));
-            response = send(url.resolve(location));
+            discard(response);
+            current = current.resolve(location);
         }
-        return response;
+        throw new IOException("GitHub redirected too many times (more than " + MAX_REDIRECTS + ")");
     }
 
     private HttpResponse<InputStream> send(URI uri) throws IOException {
