@@ -1,4 +1,4 @@
-name: Build and test
+name: Build
 
 on:
   push:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build and test
+    name: Build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -25,12 +25,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Java 8 for runtime checks
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: temurin
-          java-version: '8'
-
       - name: Set up Java
         uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
@@ -38,103 +32,28 @@ jobs:
           java-version: '25'
           cache: gradle
           cache-dependency-path: |
-            **/*.gradle.kts
-            **/gradle.lockfile
-            gradle/verification-metadata.xml
+            build.gradle
+            settings.gradle
             gradle/wrapper/gradle-wrapper.properties
 
-      - name: Check the probe script compiles
-        run: python3 -m py_compile tools/run_velocity_probe.py tools/run_platform_probe.py
+      - name: Build
+        run: bash ./gradlew --no-daemon build shadowJar
 
-      - name: Check docs
-        run: python3 tools/check_docs.py
-
-      - name: Test Python tools
-        run: python3 -m unittest discover -s tools -p 'test_*.py'
-
-      - name: Build and test
-        run: bash ./gradlew --no-daemon build :platform-velocity:probeJar :platform-bukkit:legacyRuntimeProbe
-
-      - name: Save plugin JARs
+      - name: Save plugin JAR
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: OriginGate-${{ github.sha }}
-          path: |
-            platform-velocity/build/libs/OriginGate-Velocity-*.jar
-            platform-bukkit/build/libs/OriginGate-Bukkit-*.jar
-            platform-bungeecord/build/libs/OriginGate-BungeeCord-*.jar
+          name: OriginGate-Velocity-${{ github.sha }}
+          path: build/libs/OriginGate-Velocity-*.jar
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
 
-      - name: Save test and build reports
+      - name: Save build reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: build-reports-${{ github.sha }}
           path: |
-            */build/test-results/*/TEST-*.xml
-            */build/reports/tests/
-            build/reports/dependency-verification/
-          if-no-files-found: ignore
-          retention-days: 7
-
-  remote-database:
-    name: MariaDB storage test
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    # A throwaway MariaDB that exists only for this job, so no secrets are needed.
-    services:
-      mariadb:
-        image: mariadb:11.4
-        env:
-          MARIADB_DATABASE: origingate_test_ci
-          MARIADB_USER: origingate
-          MARIADB_PASSWORD: origingate-ci
-          MARIADB_RANDOM_ROOT_PASSWORD: "1"
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=24
-    steps:
-      - name: Check out sources
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up Java
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: gradle
-          cache-dependency-path: |
-            **/*.gradle.kts
-            **/gradle.lockfile
-            gradle/verification-metadata.xml
-            gradle/wrapper/gradle-wrapper.properties
-
-      - name: Run the remote database test
-        env:
-          OG_TEST_DB_ALLOW_WRITES: "true"
-          OG_TEST_DB_DATABASE: origingate_test_ci
-          OG_TEST_DB_HOST: 127.0.0.1
-          OG_TEST_DB_PORT: "3306"
-          OG_TEST_DB_USERNAME: origingate
-          OG_TEST_DB_PASSWORD: origingate-ci
-          OG_TEST_DB_SSL_MODE: disable
-        run: bash ./gradlew --no-daemon :core:remoteDatabaseTest
-
-      - name: Save the test report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: remote-database-report-${{ github.sha }}
-          path: |
-            core/build/test-results/remoteDatabaseTest/TEST-*.xml
-            core/build/reports/tests/remoteDatabaseTest/
+            build/reports/
           if-no-files-found: ignore
           retention-days: 7

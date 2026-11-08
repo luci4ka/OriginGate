@@ -18,5 +18,5 @@ public enum Rule {
     public String id() { return id; }
 
     /** Rules added after 1.0.0, whose config section and kick message may be missing from older files. */
-    public boolean addedLater() { return this == DENY_NETWORKS || this == HOSTING; }
+    public boolean addedLater() { return this == DENY_NETWORKS || this == HOSTING || this == LOOKUP_FAILURE; }
 }

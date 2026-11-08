@@ -121,20 +121,30 @@ public final class ConfigLoader {
     }
 
     private static Rules rules(YamlSection rules) throws ConfigException {
+        // "proxy" is accepted for old configs but is optional: no bundled provider sets proxy = true.
         rules.allowOnly("deny-addresses", "deny-networks", "vpn", "proxy", "hosting", "country");
         YamlSection deny = rules.section("deny-addresses");
         deny.allowOnly("enabled", "list", "bypass-permissions");
         YamlSection vpn = rules.section("vpn");
         vpn.allowOnly("enabled", "bypass-permissions");
-        YamlSection proxy = rules.section("proxy");
-        proxy.allowOnly("enabled", "allowed-countries", "bypass-permissions");
         YamlSection country = rules.section("country");
         country.allowOnly("enabled", "mode", "countries", "bypass-permissions");
+
+        ProxyRule proxy;
+        if (rules.has("proxy")) {
+            YamlSection section = rules.section("proxy");
+            section.allowOnly("enabled", "allowed-countries", "bypass-permissions");
+            proxy = new ProxyRule(section.bool("enabled"), countries(section, "allowed-countries"),
+                    permissions(section, "bypass-permissions"));
+        } else {
+            proxy = new ProxyRule(false, List.of(), List.of());
+        }
+
         return new Rules(
                 new AddressRule(deny.bool("enabled"), ranges(deny, "list"), permissions(deny, "bypass-permissions")),
                 denyNetworks(rules),
                 new BasicRule(vpn.bool("enabled"), permissions(vpn, "bypass-permissions")),
-                new ProxyRule(proxy.bool("enabled"), countries(proxy, "allowed-countries"), permissions(proxy, "bypass-permissions")),
+                proxy,
                 hosting(rules),
                 new CountryRule(country.bool("enabled"), country.choice("mode", CountryMode.class),
                         countries(country, "countries"), permissions(country, "bypass-permissions")));
