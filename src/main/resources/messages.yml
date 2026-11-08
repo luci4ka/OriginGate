@@ -1,0 +1,19 @@
+# Сообщения OriginGate. Форматирование MiniMessage: https://docs.advntr.dev/minimessage/format.html
+# Плейсхолдеры: <username>, <uuid>, <ip>, <rule>, <time>, <provider>, <organisation>,
+# <country>, <country_code>, <city>, <region>, <type>
+
+kick:
+  deny-addresses: "<red>Вам нельзя заходить на этот сервер."
+  deny-networks: "<red>Вам нельзя заходить на этот сервер."
+  vpn: "<red>VPN на этом сервере запрещены."
+  proxy: "<red>Прокси на этом сервере запрещены."
+  hosting: "<red>Хостинги и дата-центры на этом сервере запрещены."
+  country: "<red>Вам нельзя заходить на этот сервер из вашей страны."
+
+bypass-notice: "<gray>Вы прошли проверку OriginGate по обходу."
+
+alerts:
+  denied: "<red>[OriginGate] <white><username> не допущен: <rule> (<country>, <type>)."
+  bypassed: "<yellow>[OriginGate] <white><username> прошёл проверку по обходу: <rule>."
+  lookup-problem: "<red>[OriginGate] <white><message>"
+  lookup-recovered: "<green>[OriginGate] <white><message>"

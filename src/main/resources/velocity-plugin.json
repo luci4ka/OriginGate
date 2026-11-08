@@ -3,7 +3,7 @@
   "name": "OriginGate",
   "version": "${version}",
   "description": "IP lookup and access rules for Velocity",
-  "authors": ["YourName"],
+  "authors": ["Kaizen Network", "luci4ka"],
   "dependencies": [],
-  "main": "io.github.origingate.velocity.OriginGateVelocity"
+  "main": "ru.terracraft.origingate.velocity.OriginGateVelocity"
 }

@@ -1,0 +1,115 @@
+# Конфигурация OriginGate.
+# Перезагрузка: /origingate reload. Изменения в lookup применяются к новым проверкам.
+
+config-version: 1
+
+# true: решения логируются и отправляются в алерты, но никто не кикается. Для безопасного теста правил.
+dry-run: false
+
+# none, kicks, matches, all, debug — что показывать в консоли.
+# none — ничего, kicks — только кики, matches — все совпадения правил,
+# all — все проверки, debug — пошаговые детали.
+console-log: kicks
+
+# Писать решения в ежедневные файлы logs/yyyy-MM-dd.log.
+log-file: true
+# 0 — хранить все файлы. Файлы старше этого числа дней удаляются при старте и раз в сутки.
+log-file-keep-days: 14
+
+lookup:
+  # Loopback, приватные, link-local и unique local адреса пропускаются без проверки.
+  skip-private-addresses: true
+
+  # allow или deny — что делать, если проверка не удалась (timeout, ошибка провайдера).
+  on-lookup-failure: deny
+
+  # Сколько ждать ответа провайдеров, прежде чем применить on-lookup-failure.
+  wait-millis: 5000
+
+  # Не больше стольких проверок провайдеров за любые 60 секунд. 0 — без лимита.
+  max-lookups-per-minute: 0
+  # allow или deny — что делать, когда лимит исчерпан. По умолчанию = on-lookup-failure.
+  on-budget-exceeded: deny
+
+  # Провайдеры для определения страны, по порядку. Нужен хотя бы один.
+  # Доступны: maxmind, asn.
+  country-from:
+    - maxmind
+
+  # Провайдеры для проверки VPN/прокси/хостинга, по порядку. Пусто — правила vpn, hosting отключены.
+  # Доступны: asn.
+  vpn-from:
+    - asn
+
+  maxmind:
+    # Путь относительно папки плагина. Файл скачивается с GitHub Releases, если отсутствует или устарел.
+    file: "GeoLite2-Country.mmdb"
+    # GeoLite2-Country или GeoLite2-City
+    edition: "GeoLite2-Country"
+    # Скачивать обновления с GitHub Releases раз в 24 часа.
+    auto-update: true
+
+bypass:
+  # Игрок с любым из этих прав проходит без проверки.
+  permissions: []
+  # Имена игроков или UUID, в нижнем регистре.
+  players: []
+  # Адреса и CIDR-диапазоны, например 203.0.113.0/24.
+  addresses: []
+
+rules:
+  deny-addresses:
+    # Блокировать адреса из list.
+    enabled: false
+    # Список адресов и CIDR-диапазонов.
+    list: []
+    # Права, дающие обход этого правила.
+    bypass-permissions: []
+
+  deny-networks:
+    # Блокировать сети из asns и organisations. Требует asn в vpn-from.
+    enabled: false
+    # Номера AS, например AS64496.
+    asns: []
+    # Текст в нижнем регистре, который ищется в названии организации.
+    organisations: []
+    bypass-permissions: []
+
+  vpn:
+    # Блокировать VPN. Требует asn в vpn-from.
+    enabled: false
+    bypass-permissions: []
+
+  hosting:
+    # Блокировать хостинги и дата-центры. Требует asn в vpn-from.
+    enabled: false
+    bypass-permissions: []
+
+  country:
+    # Блокировать по стране. Требует maxmind в country-from.
+    enabled: true
+    # allowlist или denylist
+    mode: allowlist
+    # Двухбуквенные ISO-коды стран. Пускать только из этих стран.
+    countries:
+      # Постсоветское пространство
+      - RU
+      - BY
+      - UA
+      - KZ
+      - KG
+      - TJ
+      - UZ
+      - TM
+      - AZ
+      - AM
+      - GE
+      - MD
+      - LV
+      - LT
+      - EE
+    bypass-permissions: []
+
+alerts:
+  # Игрок с любым из этих прав получает алерты о киках и обходах.
+  permissions: []
